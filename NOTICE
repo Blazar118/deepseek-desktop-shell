@@ -1,0 +1,13 @@
+DeepSeek Desktop Shell
+
+This is an unofficial, community-built desktop wrapper. It is not produced,
+endorsed, sponsored, or supported by DeepSeek (深度求索).
+
+The software contains no DeepSeek code, models, or assets. It loads the public
+website https://chat.deepseek.com/ in an embedded Chromium window, exactly as a
+browser would. All content, trademarks, and services shown inside the window
+belong to their respective owners and remain subject to DeepSeek's own terms of
+service.
+
+The name "DeepSeek" is used only to describe what website the shell displays.
+No affiliation is claimed or implied.

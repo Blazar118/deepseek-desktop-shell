@@ -1,0 +1,6 @@
+# Optional: copy to .npmrc if you are behind the Great Firewall and the
+# official registries are slow or unreachable. Delete it again if you don't
+# need it — hard-pinning mirrors is not a good default for an open project.
+registry=https://registry.npmmirror.com
+electron_mirror=https://npmmirror.com/mirrors/electron/
+electron_builder_binaries_mirror=https://npmmirror.com/mirrors/electron-builder-binaries/

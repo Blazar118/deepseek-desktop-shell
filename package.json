@@ -1,0 +1,83 @@
+{
+  "name": "deepseek-desktop-shell",
+  "productName": "DeepSeek Desktop",
+  "version": "1.0.0",
+  "description": "Windows desktop shell that loads the official chat.deepseek.com web app. No API key, no paid API, no page modification.",
+  "main": "main.js",
+  "license": "MIT",
+  "author": {
+    "name": "deepseek-desktop-shell contributors"
+  },
+  "keywords": [
+    "electron",
+    "deepseek",
+    "desktop",
+    "shell",
+    "windows",
+    "tray"
+  ],
+  "homepage": "https://github.com/Blazar118/deepseek-desktop-shell",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Blazar118/deepseek-desktop-shell.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Blazar118/deepseek-desktop-shell/issues"
+  },
+  "os": [
+    "win32"
+  ],
+  "scripts": {
+    "start": "electron .",
+    "smoke": "electron . --smoke-test",
+    "icons": "node scripts/make-icons.js",
+    "fetch-electron": "node scripts/fetch-electron.js",
+    "check:persist": "electron scripts/verify-persistence.js --write && electron scripts/verify-persistence.js --read",
+    "pack": "electron-builder --win --dir",
+    "dist": "electron-builder --win nsis"
+  },
+  "devDependencies": {
+    "electron": "43.3.0",
+    "electron-builder": "26.18.0"
+  },
+  "build": {
+    "appId": "io.github.blazar118.deepseekdesktop",
+    "npmRebuild": false,
+    "productName": "DeepSeek Desktop",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "main.js",
+      "assets/**/*",
+      "package.json"
+    ],
+    "electronDownload": {
+      "mirror": "https://npmmirror.com/mirrors/electron/"
+    },
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "build/icon.ico",
+      "artifactName": "DeepSeek-Desktop-Setup-${version}.exe"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowElevation": true,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "DeepSeek Desktop",
+      "uninstallDisplayName": "DeepSeek Desktop",
+      "deleteAppDataOnUninstall": false
+    }
+  }
+}

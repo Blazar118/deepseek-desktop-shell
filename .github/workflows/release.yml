@@ -1,0 +1,50 @@
+name: release
+
+# Builds the Windows installer on a real Windows runner and attaches it to the
+# GitHub release for the pushed tag. Pushing a tag like v1.0.0 is all it takes.
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Generate icons
+        run: node scripts/make-icons.js
+
+      - name: Syntax check
+        run: node --check main.js
+
+      - name: Build NSIS installer
+        # On the runner the default caches are writable, so the plain builder
+        # works; build.cmd only exists for restricted local machines.
+        run: npx electron-builder --win nsis
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: installer
+          path: dist/*.exe
+
+      - name: Attach to release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*.exe
+          generate_release_notes: true
