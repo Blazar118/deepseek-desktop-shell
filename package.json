@@ -33,6 +33,9 @@
     "icons": "node scripts/make-icons.js",
     "fetch-electron": "node scripts/fetch-electron.js",
     "check:persist": "electron scripts/verify-persistence.js --write && electron scripts/verify-persistence.js --read",
+    "test:agent": "node scripts/test-agent-core.js",
+    "test:bridge": "electron scripts/test-page-bridge.js",
+    "test:e2e": "electron scripts/test-agent-run.js",
     "pack": "electron-builder --win --dir",
     "dist": "electron-builder --win nsis"
   },
@@ -50,6 +53,7 @@
     },
     "files": [
       "main.js",
+      "src/**/*",
       "assets/**/*",
       "package.json"
     ],

@@ -7,4 +7,6 @@ dist/
 .profile-final/
 smoke-result.json
 persist-check.json
-smoke.log
+page-bridge-result.json
+agent-run-result.json
+*.log

@@ -18,3 +18,16 @@ over them.
 
 The name "DeepSeek" is used only to describe what website the shell displays.
 No affiliation is claimed or implied.
+
+## The opt-in agent
+
+The optional agent (off by default) automates the website the way a person would:
+it types into the composer and reads the answer back. It does not call an API, does
+not proxy traffic, and does not modify the page. Even so:
+
+- using automation against the service may breach DeepSeek's terms of use, and the
+  account used with it may be rate-limited or restricted. The risk sits with whoever
+  turns the feature on, and the app warns about it before enabling it;
+- the agent executes model-generated file operations and shell commands on the local
+  machine. Review what it does. The authors accept no liability for damage caused by
+  generated code.

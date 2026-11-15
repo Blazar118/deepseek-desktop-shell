@@ -7,18 +7,30 @@ Thanks for looking. This project is intentionally small — the goal is a correc
 These are not negotiable, because they are what makes the project legitimate:
 
 1. **No API.** No `api.deepseek.com`, no API keys, no token refresh, nothing that bills anyone.
-2. **No page modification.** No `executeJavaScript` against the live site, no CSS injection, no DOM rewriting, no `webRequest` interception.
+2. **No reverse proxy.** Do not route, replay, or relay the site's traffic.
 3. **No bypassing protections.** Captchas, risk checks, login flows stay exactly as the official page presents them.
 4. **No credential handling.** The shell never reads, stores, or fills account credentials itself.
 5. **No impersonation.** Do not make the app look like an official DeepSeek product.
+6. **The agent stays opt-in.** `src/page-bridge.js` is the only code allowed to touch the live
+   DOM, it must stay off until the user enables it, and turning it on must keep showing the
+   account-risk warning. Do not add a second injection point.
 
 A pull request that breaks any of these will be closed regardless of how useful the feature seems.
 
 ## Before you open a PR
 
 ```powershell
+npm run test:agent     # parser, path containment, every tool — no browser needed
 npm run smoke          # must report ok: true
 npm run check:persist  # must report ok: true both times
+```
+
+If you touched anything under `src/`, also run the live ones (they hit the real site
+with your own login, so only when you mean to):
+
+```powershell
+npm run test:bridge    # one message round-trip
+npm run test:e2e       # full multi-step agent run in a temp folder
 ```
 
 If your change touches window creation, tray behaviour, or the profile directory, also build and install once:

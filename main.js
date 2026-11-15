@@ -3,10 +3,14 @@
 /**
  * DeepSeek Desktop — a thin Electron shell around the official web app.
  *
- * What this file deliberately does NOT do:
- *  - it never talks to api.deepseek.com, and needs no API key;
- *  - it never injects scripts or rewrites the page, so the UI stays official;
- *  - it never intercepts the page's own network traffic.
+ * By default this file deliberately does NOT:
+ *  - talk to api.deepseek.com, or need any API key;
+ *  - inject scripts into or rewrite the page, so the UI stays official;
+ *  - intercept the page's own network traffic.
+ *
+ * The one exception is the opt-in Agent panel (src/), which is off until the
+ * user turns it on in the tray menu. It types into the composer and reads the
+ * reply back, because the official site is a UI and not an API. See README.
  *
  * What it does:
  *  - loads https://chat.deepseek.com/ in a persistent partition so login survives restarts;
@@ -16,6 +20,7 @@
 
 const { app, BrowserWindow, Tray, Menu, shell, session, nativeImage } = require('electron');
 const path = require('path');
+const { createPanel, installPanelIpc, closePanel } = require('./src/panel');
 const fs = require('fs');
 
 const OFFICIAL_URL = 'https://chat.deepseek.com/';
@@ -233,6 +238,64 @@ function isSafeExternal(url) {
 }
 
 /* ------------------------------------------------------------------ */
+/* agent (opt-in, off by default)                                      */
+/* ------------------------------------------------------------------ */
+
+// The agent drives the live chat page: it types into the composer and reads the
+// reply back. That is the one place this app breaks its own "never touch the
+// page" rule, so it is behind an explicit switch, stored in a settings file the
+// user can also delete, and it never turns itself on.
+const settings = {
+  file: null,
+  data: { agentEnabled: false, agentRoot: null },
+};
+
+function loadSettings() {
+  settings.file = path.join(PROFILE_DIR, 'settings.json');
+  try {
+    const raw = fs.readFileSync(settings.file, 'utf8');
+    const parsed = JSON.parse(raw);
+    settings.data = { ...settings.data, ...parsed };
+  } catch {
+    /* first run */
+  }
+  return settings.data;
+}
+
+function saveSettings(patch) {
+  settings.data = { ...settings.data, ...patch };
+  try {
+    fs.mkdirSync(PROFILE_DIR, { recursive: true });
+    fs.writeFileSync(settings.file, JSON.stringify(settings.data, null, 2), 'utf8');
+  } catch (err) {
+    console.error('[deepseek-desktop] could not save settings:', err.message);
+  }
+}
+
+function agentEnabled() {
+  return settings.data.agentEnabled === true;
+}
+
+function openAgentPanel() {
+  if (!agentEnabled()) {
+    const { dialog } = require('electron');
+    dialog.showMessageBox(mainWindow || undefined, {
+      type: 'warning',
+      title: 'Agent 是关着的',
+      message: 'Agent 会让模型直接操作这台电脑：读写文件、执行命令。',
+      detail:
+        '它通过自动操作 DeepSeek 网页来工作（模拟输入、读取回复），不是官方接口。' +
+        '这意味着它可能被官方判定为异常环境，极端情况下账号会被限制。\n\n' +
+        '确认要继续，请在托盘菜单里打开「Agent 模式」。',
+      buttons: ['知道了'],
+    });
+    return;
+  }
+  createPanel(mainWindow, {});
+}
+
+
+/* ------------------------------------------------------------------ */
 /* keyboard                                                            */
 /* ------------------------------------------------------------------ */
 
@@ -298,6 +361,20 @@ function buildTrayMenu() {
     },
     { type: 'separator' },
     {
+      label: 'Agent 面板',
+      click: () => openAgentPanel(),
+    },
+    {
+      label: agentEnabled() ? 'Agent 模式：已开启' : 'Agent 模式：已关闭',
+      type: 'checkbox',
+      checked: agentEnabled(),
+      click: (item) => {
+        if (item.checked) enableAgent();
+        else disableAgent();
+      },
+    },
+    { type: 'separator' },
+    {
       label: '退出',
       click: () => {
         isQuitting = true;
@@ -306,6 +383,45 @@ function buildTrayMenu() {
     },
   ]);
 }
+
+function refreshTrayMenu() {
+  if (tray && !tray.isDestroyed()) tray.setContextMenu(buildTrayMenu());
+}
+
+// Turning the agent on is the only place that spells out the trade-off, because
+// everything after this point looks like ordinary chat traffic to the site.
+function enableAgent() {
+  const { dialog } = require('electron');
+  const choice = dialog.showMessageBoxSync(mainWindow || undefined, {
+    type: 'warning',
+    title: '开启 Agent 模式',
+    message: 'Agent 会模拟操作 DeepSeek 网页来工作。',
+    detail:
+      '它不是官方接口，也不走 API。它做的是：往输入框里打字、点发送、把回复读回来，' +
+      '然后在本机读写文件、执行命令。\n\n' +
+      '两个后果你需要知道：\n' +
+      '1. 官方可能把这种用法判定为异常环境，账号存在被限制的风险；\n' +
+      '2. 模型生成的命令会真的在这台电脑上执行（危险操作会先问你）。\n\n' +
+      '随时可以在托盘菜单里关掉。',
+    buttons: ['我了解，开启', '取消'],
+    defaultId: 1,
+    cancelId: 1,
+  });
+  if (choice !== 0) {
+    refreshTrayMenu();
+    return;
+  }
+  saveSettings({ agentEnabled: true });
+  refreshTrayMenu();
+  createPanel(mainWindow, {});
+}
+
+function disableAgent() {
+  saveSettings({ agentEnabled: false });
+  refreshTrayMenu();
+  closePanel();
+}
+
 
 function showWindow() {
   if (!mainWindow) {
@@ -409,6 +525,15 @@ app.on('activate', () => {
 
 app.whenReady().then(() => {
   app.setAppUserModelId('local.deepseek.desktop');
+  loadSettings();
   createWindow();
-  if (!SMOKE) buildTray();
+  if (!SMOKE) {
+    buildTray();
+    installPanelIpc({
+      getChatWindow: () => mainWindow,
+      getRoot: () => settings.data.agentRoot,
+      setRoot: (dir) => saveSettings({ agentRoot: dir }),
+      onRootChanged: () => {},
+    });
+  }
 });
