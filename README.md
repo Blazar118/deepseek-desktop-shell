@@ -86,14 +86,36 @@ This is pinned to Electron `43.3.0` on purpose. On some Windows machines Electro
 ## Layout
 
 ```
-main.js                      the whole shell
-assets/                      generated window + tray icons
-build/icon.ico               generated Windows icon
-scripts/make-icons.js        draws the icons (no external art)
-scripts/fetch-electron.js    manual Electron downloader/unpacker
+main.js                        the whole shell
+assets/icon-source.png         512x512 transparent master icon
+assets/icon.png                generated window icon (256)
+assets/tray.png                generated tray icon (32)
+build/icon.ico                 generated multi-size Windows icon (16-256)
+scripts/derive-icon-source.py  rebuilds the master from the official mark (Pillow)
+scripts/make-icons.js          generates all icon sizes from the master (zero deps)
+scripts/fetch-electron.js      manual Electron downloader/unpacker
 scripts/verify-persistence.js  cookie-survives-restart check
-scripts/smoke.cmd            smoke test helper for console-hostile environments
+scripts/smoke.cmd              smoke test helper for console-hostile environments
 ```
+
+## Icons
+
+`assets/icon-source.png` is derived from the mark that `chat.deepseek.com` itself
+serves (`fe-static.deepseek.com/chat/icon-512.png`, the apple-touch-icon and
+manifest icon). The official file is a blue whale on a solid white square; the
+master here has that white keyed out by flood-filling from the border, so the
+whale's white belly stays intact and the anti-aliased rim is recovered from the
+red channel — no white halo on dark backgrounds.
+
+`npm run icons` regenerates `icon.png`, `tray.png` and `icon.ico` from the master
+using only Node built-ins. Rebuild the master itself (needs Pillow + numpy, not a
+project dependency):
+
+```
+python scripts/derive-icon-source.py icon-512.png assets/icon-source.png
+```
+
+All logos and the whale mark belong to DeepSeek; see [NOTICE](NOTICE).
 
 ## License
 
@@ -109,6 +131,8 @@ MIT — see [LICENSE](LICENSE).
 - 登录态存在独立 Chromium 配置目录里，关掉再开不用重新登录。
 - 站外链接交给系统浏览器，壳内只跑 deepseek.com。
 - 不注入脚本、不改 DOM、不拦截请求、不绕过验证码。
+- 图标取自官方网页自己提供的鲸鱼标（`fe-static.deepseek.com/chat/icon-512.png`），
+  把白底抠成透明后生成各尺寸，安装包、桌面快捷方式、任务栏、托盘都是它。
 
 常用命令：`npm install` → `npm start` 运行；`npm run dist` 打包出 `dist\DeepSeek-Desktop-Setup-1.0.0.exe`。
 本机若因代理/权限装不上 Electron 二进制，用 `node scripts/fetch-electron.js` 从国内镜像手动拉取。

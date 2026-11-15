@@ -9,5 +9,12 @@ browser would. All content, trademarks, and services shown inside the window
 belong to their respective owners and remain subject to DeepSeek's own terms of
 service.
 
+The application icon is derived (background keyed out, resized) from the mark
+served by chat.deepseek.com itself at
+https://fe-static.deepseek.com/chat/icon-512.png. The whale logo and the
+"DeepSeek" name are trademarks of their owner. They are used here only to
+identify which service the window displays, and this project claims no rights
+over them.
+
 The name "DeepSeek" is used only to describe what website the shell displays.
 No affiliation is claimed or implied.
