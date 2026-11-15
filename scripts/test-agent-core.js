@@ -191,17 +191,26 @@ const run = (name, args) => callTool(name, args, { root });
     assert.strictEqual(r.error, 'unknown-tool');
   });
 
-  await check('run_command executes in root', async () => {
-    const r = await run('run_command', { command: 'Write-Output "agent-test-ok"' });
-    assert.strictEqual(r.ok, true);
-    assert.ok(r.stdout.includes('agent-test-ok'), 'stdout was: ' + r.stdout);
-  });
+  // run_command shells out to PowerShell, so these two only mean anything on
+  // Windows. They are skipped rather than faked elsewhere: a POSIX machine
+  // would need a different command interpreter entirely, and pretending the
+  // PowerShell path works there would hide that.
+  if (process.platform === 'win32') {
+    await check('run_command executes in root', async () => {
+      const r = await run('run_command', { command: 'Write-Output "agent-test-ok"' });
+      assert.strictEqual(r.ok, true);
+      assert.ok(r.stdout.includes('agent-test-ok'), 'stdout was: ' + r.stdout);
+    });
 
-  await check('run_command reports failure', async () => {
-    const r = await run('run_command', { command: 'throw "boom"' });
-    assert.strictEqual(r.ok, false);
-    assert.ok((r.stderr || '').includes('boom'));
-  });
+    await check('run_command reports failure', async () => {
+      const r = await run('run_command', { command: 'throw "boom"' });
+      assert.strictEqual(r.ok, false);
+      assert.ok((r.stderr || '').includes('boom'));
+    });
+  } else {
+    console.log('  skip run_command executes in root (needs Windows PowerShell)');
+    console.log('  skip run_command reports failure (needs Windows PowerShell)');
+  }
 
   await check('catalogue marks dangerous tools', async () => {
     const cat = toolCatalogue();
