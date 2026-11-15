@@ -1,10 +1,19 @@
 # DeepSeek Desktop Shell
 
+[![CI](https://github.com/Blazar118/deepseek-desktop-shell/actions/workflows/ci.yml/badge.svg)](https://github.com/Blazar118/deepseek-desktop-shell/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Platform](https://img.shields.io/badge/platform-Windows%2010%2F11-0078D4.svg)](#requirements)
+[![No API key](https://img.shields.io/badge/API%20key-not%20required-success.svg)](#what-it-does-not-do)
+
 A thin Electron shell that loads the **official** [chat.deepseek.com](https://chat.deepseek.com/) web app as a Windows desktop window, plus an **opt-in local agent** that can read and write files on your machine.
 
 By default it is deliberately tiny: no API client, no API key, no injected scripts, no page rewrites. You log in with your own account on the real site, exactly as you would in a browser.
 
 > Not affiliated with DeepSeek. Unofficial, unendorsed, use at your own risk.
+
+## Install
+
+Grab `DeepSeek-Desktop-Setup-*.exe` from [Releases](https://github.com/Blazar118/deepseek-desktop-shell/releases), or build it yourself with `npm run dist`.
 
 ## What it does
 

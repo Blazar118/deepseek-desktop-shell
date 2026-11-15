@@ -6,23 +6,38 @@ on:
   pull_request:
 
 jobs:
-  syntax:
+  checks:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with:
           node-version: 20
+
       - name: Syntax check
         run: |
           node --check main.js
-          for f in scripts/*.js; do node --check "$f"; done
+          for f in src/*.js scripts/*.js; do node --check "$f"; done
+
       - name: Validate package metadata
-        run: node -e "const p=require('./package.json'); if(!p.main||!p.build) process.exit(1); console.log(p.name, p.version);"
+        run: |
+          node -e "const p=require('./package.json'); if(!p.main||!p.build) process.exit(1); console.log(p.name, p.version);"
+
+      - name: Agent unit tests (parser, path containment, tools)
+        # These deliberately avoid Electron and the browser: no window, no network.
+        run: node scripts/test-agent-core.js
+
       - name: Repo hygiene
         run: |
           test -f LICENSE
           test -f README.md
+          test -f NOTICE
+          test -f CONTRIBUTING.md
+          test -f assets/icon-source.png
           test -f assets/icon.png
           test -f assets/tray.png
           test -f build/icon.ico
+          for f in main.js src/agent.js src/page-bridge.js src/tools.js src/panel.js; do
+            test -f "$f" || { echo "missing $f"; exit 1; }
+          done
