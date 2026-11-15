@@ -97,8 +97,17 @@ ok('parent escape rejected', () => {
 });
 
 ok('absolute escape rejected', () => {
+  // Built from the real platform root so the test is meaningful on any OS.
+  const r = resolveInside(root, path.join(path.parse(root).root, 'Windows', 'System32', 'drivers', 'etc', 'hosts'));
+  assert.strictEqual(r.ok, false);
+});
+
+ok('foreign-platform absolute path rejected', () => {
+  // A Windows path handed to a POSIX build must not be treated as a relative name.
   const r = resolveInside(root, 'C:\\Windows\\System32\\drivers\\etc\\hosts');
   assert.strictEqual(r.ok, false);
+  const r2 = resolveInside(root, '\\\\server\\share\\file.txt');
+  assert.strictEqual(r2.ok, false);
 });
 
 ok('nested escape rejected', () => {

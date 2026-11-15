@@ -25,10 +25,20 @@ const DEFAULT_TIMEOUT_MS = 60000;
 /* ------------------------------------------------------------------ */
 
 function resolveInside(root, target) {
+  const raw = String(target ?? '.');
   const rootAbs = path.resolve(root);
-  const full = path.resolve(rootAbs, target || '.');
+
+  // Reject absolute input up front instead of relying on path.resolve to fold it
+  // in. On Windows an absolute path can also arrive as a foreign drive or a UNC
+  // share, and a backslash path handed to a POSIX build would otherwise look
+  // like a harmless relative name.
+  if (path.isAbsolute(raw) || path.win32.isAbsolute(raw) || raw.startsWith('\\\\')) {
+    return { ok: false, error: 'path-outside-workspace', detail: raw };
+  }
+
+  const full = path.resolve(rootAbs, raw);
   const rel = path.relative(rootAbs, full);
-  if (rel.startsWith('..') || path.isAbsolute(rel)) {
+  if (rel.startsWith('..') || path.isAbsolute(rel) || path.win32.isAbsolute(rel)) {
     return { ok: false, error: 'path-outside-workspace', detail: full };
   }
   return { ok: true, path: full, rel: rel === '' ? '.' : rel };
